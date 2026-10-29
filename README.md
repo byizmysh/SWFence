@@ -132,7 +132,7 @@ apk del luci-app-swfence swfence
 
 SWFence checks console traffic in early bridge/inet prerouting chains at priority `-310`. An ordinary allow rule cannot override its final drop. It does not have exclusive control of the router: another privileged module can remove or replace rules, change packet handling before these checks, or provide an accelerated path. Recheck isolation after network/firewall changes.
 
-Allowed LAN hosts and internet exceptions must be trusted: they can relay traffic outward. Other Wi-Fi networks, hotspots, unregistered adapters, downstream NAT and nonstandard acceleration are outside the verified test scope. No console/account ban-prevention guarantee is made. SWFence is not affiliated with Nintendo or 90DNS.
+Allowed LAN hosts and internet exceptions must be trusted: they can relay traffic outward. Other Wi-Fi networks, hotspots, unregistered adapters, downstream NAT and nonstandard acceleration are outside the verified test scope. No console/account ban-prevention guarantee is made.
 
 The project has **23 core tests**, LuCI view tests for state/feedback/errors, and isolated nftables packet tests for allowed traffic, blocked traffic, exception expiry/revocation and rule reload. Real hardware acceptance is still outstanding; see [testing](docs/testing.md).
 
