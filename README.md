@@ -4,6 +4,8 @@
 
 SWFence keeps selected IPv4 LAN services accessible while blocking other console traffic by MAC address. It is a router-side replacement for **90DNS when your goal is local access without general internet access**. It blocks direct-IP traffic too, so it does not need a list of every Nintendo server. Optional exact-domain and individual IPv4 exceptions let you open specific internet destinations. IPv6 remains blocked.
 
+**Release:** [v0.3.0 pre-release](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0) · [Download the install bundle](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) · [Installation instructions](INSTALL.md)
+
 **Pre-release:** automated userspace, LuCI view and isolated packet tests pass. Real-router installation, reboot behavior, actual LuCI/rpcd operation and physical Switch model compatibility still require hardware testing.
 
 ## What you can do
