@@ -42,6 +42,8 @@ The packages contain shell scripts and JavaScript (`all`/`noarch`). Runtime/kern
 >
 > Keep the console disconnected from the internet until protection is applied and checked. After changing firewall, VPN, proxy or acceleration modules, check isolation again, including after a router reboot. A correct MAC alone does not prove isolation.
 
+**Before the console's first connection:** keep its Wi-Fi disconnected and Ethernet unplugged while installing and configuring SWFence. The router needs internet access for installation; the console does not. Protection is disabled by default, and entering a MAC alone does not activate it.
+
 Use your actual router LAN address in place of `192.168.1.1`.
 
 **1. Connect from your computer:**
@@ -59,11 +61,13 @@ sh /tmp/swfence-install.sh byizmysh/SWFence v0.3.0
 
 The installer checks the firmware family, downloads its two native packages, verifies the selected files against the release SHA256SUMS, installs dependencies and opens the setup wizard. It does not guess the console's MAC. The checksum manifest comes from the same GitHub release; use the repository you trust. OpenWrt 25.12 uses `--allow-untrusted` only for the two local release APKs after checksum verification; they are not signed by the OpenWrt project.
 
-**3. Complete setup:** enter your actual Wi-Fi/Ethernet MACs, this OpenWrt router's LAN IPv4, and the allowed local subnet. Defaults are detected from the `lan` interface where possible. Check them before enabling protection. The bundled example MACs cannot be enabled.
+**3. Complete setup:** enter your actual Wi-Fi/Ethernet MACs, this OpenWrt router's LAN IPv4, and the allowed local subnet. Defaults are detected from the `lan` interface where possible; check them. The wizard enables and applies protection: check that it reports success. If configuring in LuCI instead, explicitly enable protection and apply. The bundled example MACs cannot be enabled. Keep the console disconnected.
 
-**4. On the console:** set **both DNS fields** to the OpenWrt router's LAN IPv4, remove old 90DNS addresses, disable console proxy settings and reconnect.
+**4. Check the router:** open **LuCI → Services → SWFence** (sign in again if needed). For complete external blocking, verify that both internet-exception lists are empty. Check that protection is enabled, settings are applied and both firewall guards are loaded; run local diagnostics. Resolve any errors before connecting the console.
 
-**5. In LuCI:** sign in again if needed, then open **Services → SWFence**. Run local diagnostics and check traffic from the console. A successful basic connection check alone does not prove internet isolation.
+**5. Connect the console:** leave **IP Address Settings → Automatic** if using DHCP. Set **DNS Settings → Manual** and enter the OpenWrt router's LAN IPv4 in **both DNS fields**, replacing old 90DNS addresses. Disable console proxy settings, then connect. Verify local access and blocked external traffic from the console. A successful basic connection check alone does not prove internet isolation.
+
+**Router fields versus console DNS:** **Router LAN IPv4** and **Allowed IPv4 subnet** are SWFence settings on the router; do not enter the subnet as the console's address. Once the MAC guard is active, it blocks unapproved external traffic independently of console DNS. Keeping old 90DNS addresses or automatic DNS does not bypass the guard, but external DNS is blocked by default. Use the router's LAN IPv4 for SWFence's local DNS/connection-check responses. Automatic DNS is suitable only if DHCP supplies that same router DNS address.
 
 Download the [release archive](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) for the installer, native packages and English installation instructions. See [INSTALL.md](INSTALL.md) for archive/manual installation and [all release files](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0).
 
@@ -71,7 +75,7 @@ Download the [release archive](https://github.com/byizmysh/SWFence/releases/down
 
 **Wi-Fi MAC:** on the console, open HOME → System Settings → Internet → System MAC Address. [Nintendo instructions](https://en-americas-support.nintendo.com/app/answers/detail/a_id/22397/p/897).
 
-**Ethernet MAC:** use the actual dock/USB adapter's MAC. Check wired connection details, the adapter label or OpenWrt DHCP leases (`/tmp/dhcp.leases`). Replacing an adapter may require a new entry. Hostnames alone are not reliable identification. To identify an unprotected device without exposing it, disconnect WAN, identify its lease on the LAN, configure protection, then restore WAN.
+**Ethernet MAC:** use the actual dock/USB adapter's MAC. Check wired connection details, the adapter label or OpenWrt DHCP leases (`/tmp/dhcp.leases`). Replacing an adapter may require a new entry. Hostnames alone are not reliable identification. If you must connect an unprotected console to discover its MAC, install the packages first, then physically disconnect the router's WAN and any backup internet uplinks. Identify its lease on the LAN, enable/apply protection and check the guards, then restore WAN. The console must have no alternative internet connection during discovery.
 
 **Router LAN IPv4:** the local address of this OpenWrt router, often the IPv4 used to open LuCI, such as `192.168.1.1`. In a multi-router network, the default gateway may belong to a different router; select the OpenWrt instance running SWFence.
 

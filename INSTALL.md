@@ -9,6 +9,8 @@ This release supports OpenWrt 24.10.x (opkg) and 25.12.x (apk) with firewall4. A
 >
 > Keep the console disconnected from the internet until protection is applied and checked. After changing firewall, VPN, proxy or acceleration modules, check isolation again, including after a router reboot. A correct MAC alone does not prove isolation.
 
+**Before any installation method:** keep the console's Wi-Fi disconnected and Ethernet unplugged. The router needs internet access for package downloads; the console does not. Protection is disabled by default. Do not connect the console until its actual MACs are configured, protection is enabled/applied and the router checks pass.
+
 From your computer, connect using your router's actual LAN address:
 
 ```sh
@@ -22,7 +24,7 @@ wget -O /tmp/swfence-install.sh https://github.com/byizmysh/SWFence/releases/dow
 sh /tmp/swfence-install.sh byizmysh/SWFence v0.3.0
 ```
 
-The script downloads the matching native packages and verifies their release checksums before installation. Complete the Wi-Fi/Ethernet MAC, router LAN IPv4 and allowed-subnet wizard. Set both console DNS addresses to that router IPv4 and reconnect. Open LuCI → Services → SWFence, run diagnostics, and verify allowed/blocked traffic from the console.
+The script downloads the matching native packages and verifies their release checksums before installation. Complete the Wi-Fi/Ethernet MAC, router LAN IPv4 and allowed-subnet wizard; check that enabling/applying protection succeeds. While the console is still disconnected, open LuCI → Services → SWFence, check the applied settings and both firewall guards, leave both internet-exception lists empty for complete external blocking, and run diagnostics. Then set both console DNS addresses manually to that router LAN IPv4, leave console IP addressing automatic if using DHCP, disable console proxy settings and connect. Verify allowed/blocked traffic from the console.
 
 ## If you downloaded the archive
 
@@ -64,6 +66,12 @@ swfence setup
 ```
 
 Run only the package-manager commands for your firmware family. The APKs are local unsigned packages; use `--allow-untrusted` only after verifying these downloaded files. Dependencies still come from your router's firmware feeds.
+
+## Before connecting the console
+
+Router LAN IPv4 and Allowed IPv4 subnet are settings on the router, not static IP settings for the console. Active MAC firewall rules block unapproved external traffic independently of console DNS; old 90DNS addresses cannot bypass them. Manual DNS pointing to the OpenWrt router provides SWFence's local replies. Automatic DNS is suitable only if DHCP supplies that same router DNS address.
+
+If discovering an Ethernet MAC requires connecting an unprotected console, install the packages first, physically disconnect WAN and all backup internet uplinks, identify the console's LAN lease, then enable/apply protection and check the guards before restoring WAN. Keep the console disconnected from all other internet connections.
 
 ## After installation
 
