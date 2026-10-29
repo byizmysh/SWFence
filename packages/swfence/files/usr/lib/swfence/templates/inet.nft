@@ -1,0 +1,29 @@
+# Included inside table inet fw4. Drop before conntrack, DNAT and router redirects.
+set swfence_domain_v4 {
+    type ipv4_addr
+    flags timeout
+    timeout 180s
+}
+chain swfence_policy {
+    ip daddr { @ROUTER_IP@, 255.255.255.255 } udp sport 68 udp dport 67 counter return comment "SWFence DHCP only"
+    ip daddr @ROUTER_IP@ udp dport 53 counter return comment "SWFence isolated DNS"
+    ip daddr @ROUTER_IP@ tcp dport { 53, 80 } counter return comment "SWFence local DNS and conntest"
+    ip daddr @LOCAL_HOST@ tcp dport @LOCAL_PORT@ counter return comment "SWFence host only"
+    @LAN_RULES@
+    @IP_EXCEPTIONS@
+    ip daddr @swfence_domain_v4 counter return comment "SWFence domain IPv4 exception"
+    meta nfproto ipv6 counter drop comment "SWFence block IPv6"
+    counter drop comment "SWFence block other routed traffic"
+}
+
+chain swfence_early {
+    type filter hook prerouting priority -310; policy accept;
+    ether saddr @MACS@ jump swfence_policy
+}
+
+chain swfence_redirect {
+    type nat hook prerouting priority -110; policy accept;
+    ether saddr @MACS@ ip daddr @ROUTER_IP@ udp dport 53 counter redirect to :5357 comment "SWFence isolated DNS redirect"
+    ether saddr @MACS@ ip daddr @ROUTER_IP@ tcp dport 53 counter redirect to :5357 comment "SWFence isolated DNS redirect"
+    ether saddr @MACS@ ip daddr @ROUTER_IP@ tcp dport 80 counter redirect to :18087 comment "SWFence local conntest redirect"
+}

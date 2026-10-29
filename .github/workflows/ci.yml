@@ -1,0 +1,29 @@
+name: Test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test tools
+        run: sudo apt-get update && sudo apt-get install -y dnsmasq-base nftables iproute2
+      - name: Fetch checksum-verified OpenWrt test rootfs
+        run: |
+          curl -fL -o /tmp/rootfs.tar.gz https://downloads.openwrt.org/releases/24.10.4/targets/x86/64/openwrt-24.10.4-x86-64-rootfs.tar.gz
+          echo 'e7f8ab84eef55c7eb23492de7b0517dbc23fbedaa4abbb680fe64720c309dc03  /tmp/rootfs.tar.gz' | sha256sum -c -
+          mkdir /tmp/openwrt-rootfs
+          tar -xzf /tmp/rootfs.tar.gz -C /tmp/openwrt-rootfs
+      - name: Unit and real OpenWrt userspace tests
+        run: sudo env SWFENCE_ROOTFS=/tmp/openwrt-rootfs python3 tests/test_core.py
+      - name: LuCI view tests
+        run: node tests/test_panel.cjs
+      - name: Isolated kernel packet tests
+        run: sudo unshare -n python3 tests/kernel_probe.py
+      - name: Build source release
+        run: python3 scripts/build-release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swfence-source
+          path: dist/

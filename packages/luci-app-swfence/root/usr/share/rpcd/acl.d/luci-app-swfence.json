@@ -1,0 +1,7 @@
+{
+  "luci-app-swfence": {
+    "description": "Read SWFence status and local diagnostics; configure SWFence",
+    "read": { "ubus": { "swfence": [ "status", "diagnostics" ] } },
+    "write": { "ubus": { "swfence": [ "configure" ] } }
+  }
+}

@@ -1,0 +1,16 @@
+/dist/
+__pycache__/
+*.pyc
+.DS_Store
+*.ipk
+*.apk
+*.tar.gz
+*.tar.zst
+*.key
+*.pem
+*known_hosts*
+/docs/*.jpg
+/docs/*.jpeg
+/docs/*.png
+/docs/*.webp
+/docs/*.gif

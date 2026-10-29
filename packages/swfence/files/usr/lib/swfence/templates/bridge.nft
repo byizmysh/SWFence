@@ -1,0 +1,27 @@
+# Included after the inet fw4 table. Reset this dedicated table atomically
+# on every firewall reload; leave all other tables and MAC addresses alone.
+add table bridge swfence
+flush table bridge swfence
+add set bridge swfence swfence_domain_v4 { type ipv4_addr; flags timeout; timeout 180s; }
+flush set bridge swfence swfence_domain_v4
+# fw4 flushes rules but preserves named sets. Revoke old dynamic exceptions too.
+flush set inet fw4 swfence_domain_v4
+table bridge swfence {
+    chain console {
+        ether type arp counter return comment "SWFence ARP discovery"
+        ether type ip ip daddr { @ROUTER_IP@, 255.255.255.255 } udp sport 68 udp dport 67 counter return comment "SWFence DHCP only"
+        ether type ip ip daddr @ROUTER_IP@ udp dport 53 counter return comment "SWFence isolated DNS"
+        ether type ip ip daddr @ROUTER_IP@ tcp dport { 53, 80 } counter return comment "SWFence local DNS and conntest"
+        ether type ip ip daddr @LOCAL_HOST@ tcp dport @LOCAL_PORT@ counter return comment "SWFence host only"
+    @LAN_RULES@
+    @IP_EXCEPTIONS@
+        ether type ip ip daddr @swfence_domain_v4 counter return comment "SWFence domain IPv4 exception"
+        ether type ip6 counter drop comment "SWFence block IPv6 on bridge"
+        counter drop comment "SWFence block other bridged traffic"
+    }
+
+    chain early_guard {
+        type filter hook prerouting priority -310; policy accept;
+        ether saddr @MACS@ jump console
+    }
+}

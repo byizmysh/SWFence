@@ -1,0 +1,41 @@
+#!/bin/sh /etc/rc.common
+START=95
+STOP=10
+USE_PROCD=1
+
+start_service() {
+    /usr/lib/swfence/apply.sh || return 1
+    . /usr/lib/swfence/common.sh
+    read_config || return 1
+    procd_open_instance statistics
+    procd_set_param command /bin/sh /usr/lib/swfence/collect-statistics.sh
+    procd_set_param respawn 3600 5 5
+    procd_close_instance
+    [ "$ENABLED" = 1 ] || return 0
+    procd_open_instance dns
+    procd_set_param command /usr/sbin/dnsmasq --keep-in-foreground --conf-file=/etc/swfence/runtime/dnsmasq.conf --pid-file=
+    procd_set_param file /etc/swfence/runtime/dnsmasq.conf
+    procd_set_param respawn 3600 5 5
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+    procd_open_instance http
+    procd_set_param command /usr/sbin/uhttpd -f -p "$ROUTER_IP:18087" -h /etc/swfence/runtime/web -c /etc/swfence/runtime/httpd.conf -I index.cgi -x / -S -D -t 5 -T 10 -k 0 -n 2 -N 4
+    procd_set_param respawn 3600 5 5
+    procd_set_param stdout 1
+    procd_set_param stderr 1
+    procd_close_instance
+    # Existing instances must re-read the cleared/replaced hosts file as well.
+    ubus call service signal '{"name":"swfence","instance":"dns","signal":1}' >/dev/null 2>&1 || true
+    if [ -n "$ALLOWED_DOMAINS" ]; then
+        procd_open_instance domains
+        procd_set_param command /bin/sh /usr/lib/swfence/refresh-allowlist.sh daemon
+        procd_set_param file /etc/swfence/active.env
+        procd_set_param respawn 3600 5 5
+        procd_close_instance
+    fi
+}
+
+# Leave the guard in place if local DNS/HTTP is stopped or crashes.
+# Explicitly disabling protection and applying removes the firewall guard.
+service_triggers() { procd_add_reload_trigger swfence; }

@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+case "${1:-}" in
+    list) printf '%s\n' '{"status":{},"diagnostics":{},"configure":{"enabled":"String","macs":"String","router_ip":"String","lan_subnet":"String","local_host":"String","local_port":"String","allowed_ips":"String","allowed_domains":"String"}}' ;;
+    call)
+        case "${2:-}" in
+            status|diagnostics|configure) exec "${SWFENCE_ROOT:-}/usr/sbin/swfence" "$2" ;;
+            *) exit 1 ;;
+        esac
+        ;;
+    *) exit 1 ;;
+esac

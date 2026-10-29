@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+set -f
+. "${SWFENCE_ROOT:-}/usr/lib/swfence/common.sh"
+case "${1:-help}" in
+    apply) exec "$LIB/apply.sh" ;;
+    remove) SWFENCE_REMOVE=1; export SWFENCE_REMOVE; exec "$LIB/apply.sh" ;;
+    status|diagnostics|configure) exec "$LIB/$1.sh" ;;
+    setup) exec "$LIB/setup.sh" ;;
+    reload) root_required; exec "$R/etc/init.d/swfence" reload ;;
+    rollback)
+        root_required
+        [ -f "$STATE/previous.uci" ] || { echo 'No previous applied configuration.' >&2; exit 1; }
+        uc import swfence < "$STATE/previous.uci"
+        uc commit swfence
+        exec "$R/etc/init.d/swfence" reload
+        ;;
+    *) echo 'Usage: swfence {status|diagnostics|configure|reload|rollback|remove}' ;;
+esac

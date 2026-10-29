@@ -1,0 +1,12 @@
+config swfence 'main'
+	option enabled '0'
+	option router_ip '192.168.1.1'
+	option lan_subnet '192.168.1.0/24'
+	# Random examples only. Replace before enabling protection.
+	list mac '02:7e:93:4c:a8:61'
+	list mac '02:b4:6f:21:d9:30'
+	option local_host ''
+	option local_port ''
+	# Optional exact-name/domain and individual IPv4 internet exceptions.
+	# list allowed_domain 'example.com'
+	# list allowed_ip '1.1.1.1'

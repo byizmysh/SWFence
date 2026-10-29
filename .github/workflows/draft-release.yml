@@ -1,0 +1,17 @@
+name: Prepare draft release
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  draft:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/build-release.py
+      - name: Create a source-only draft for human review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(cat VERSION)
+          gh release create "v$version" dist/* --draft --title "SWFence $version" --notes-file CHANGELOG.md

@@ -1,0 +1,54 @@
+name: Build native packages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        include:
+          - family: '24.10'
+            version: '24.10.4'
+            sdk: openwrt-sdk-24.10.4-x86-64_gcc-13.3.0_musl.Linux-x86_64.tar.zst
+            sha256: 229e871f734a2cee5ce3ad6a3e98d3836b0899bfdeaea4d9c2c5cc7b1fce1407
+            ext: ipk
+          - family: '25.12'
+            version: '25.12.2'
+            sdk: openwrt-sdk-25.12.2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst
+            sha256: 4abb32a6dd05f80c24fc1a487a94b1f5f0a5d4cd560ff3dd8c1bf77793a2d5dc
+            ext: apk
+    steps:
+      - uses: actions/checkout@v4
+      - name: SDK host tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib gettext git libncurses-dev libssl-dev python3-setuptools rsync swig unzip zlib1g-dev file wget zstd
+      - name: Download and verify official SDK
+        env:
+          SDK: ${{ matrix.sdk }}
+          VERSION: ${{ matrix.version }}
+          DIGEST: ${{ matrix.sha256 }}
+        run: |
+          curl -fL -o /tmp/sdk.tar.zst "https://downloads.openwrt.org/releases/$VERSION/targets/x86/64/$SDK"
+          echo "$DIGEST  /tmp/sdk.tar.zst" | sha256sum -c -
+          mkdir /tmp/sdk
+          tar --zstd --strip-components=1 -xf /tmp/sdk.tar.zst -C /tmp/sdk
+      - name: Build
+        run: sh scripts/build-sdk.sh /tmp/sdk
+      - name: Collect the two application packages
+        env:
+          FAMILY: ${{ matrix.family }}
+          EXT: ${{ matrix.ext }}
+        run: |
+          mkdir -p dist
+          for package in swfence luci-app-swfence; do
+            file=$(find /tmp/sdk/bin/packages -type f \( -name "${package}_*.${EXT}" -o -name "${package}-[0-9]*.${EXT}" \) | head -1)
+            test -n "$file"
+            cp "$file" "dist/$package-$FAMILY.$EXT"
+          done
+          cd dist
+          sha256sum * > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: swfence-${{ matrix.family }}
+          path: dist/
