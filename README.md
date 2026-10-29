@@ -9,8 +9,6 @@ SWFence keeps selected IPv4 LAN services accessible while blocking other console
 
 **Release:** [v0.3.0](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0) · [Download the install bundle](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) · [Installation instructions](INSTALL.md)
 
-**Validation:** automated userspace, LuCI view and isolated packet tests pass. Real-router installation, reboot behavior, actual LuCI/rpcd operation and physical Switch model compatibility still require hardware testing.
-
 ## What you can do
 
 - Register the console's Wi-Fi MAC and each dock/Ethernet adapter MAC.
