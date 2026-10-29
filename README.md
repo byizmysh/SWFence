@@ -89,14 +89,6 @@ Add entries in **Allowed internet domains** or **Allowed internet IPv4 addresses
 
 A domain exception permits its destination IP, which may also serve other sites. An allowed proxy/VPN endpoint can relay traffic. The panel reports waiting, resolved/unresolved, expired and failed refresh states. See [implementation details](docs/internet-exceptions.md).
 
-## Status, feedback and diagnostics
-
-The apply button shows **Applying…**, **Verifying…**, then **Applied** after the submitted settings match the router's status. A persistent message records confirmation or explains a rejection/connection failure. New edits mark the form as unsaved. Repeated clicks cannot submit the same pending operation twice.
-
-Status and counters refresh every **5 seconds**. **Start live diagnostics** repeats bounded router-local configuration, firewall and DNS/HTTP checks every **15 seconds**, until stopped or the page is closed. It does not test internet access from the console. **ON CONSOLE** marks the check you perform on the actual device. Loaded rules, DNS success and observed packet drops are supporting evidence, not proof of every network path.
-
-The bridge counter records drops at the local bridge; the routed-path counter records drops at the router's IP-processing layer. These are packets, not servers or sessions. Today's totals restart at midnight in the **router timezone**. A background collector runs with the panel closed. Statistics stay in RAM to avoid flash writes and start a partial-day collection after a router reboot; the actual start time is displayed. Sampling and rule resets can omit packets. Protection itself has no daily time limit.
-
 ## CLI, updates and removal
 
 ```sh
