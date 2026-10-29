@@ -1,8 +1,13 @@
 # Installing SWFence 0.3.0
 
-This is a pre-release for OpenWrt 24.10.x (opkg) and 25.12.x (apk) with firewall4. Actual router/console hardware acceptance remains outstanding. The OpenWrt router itself needs internet access for installation; SWFence restricts only configured console MACs.
+This release supports OpenWrt 24.10.x (opkg) and 25.12.x (apk) with firewall4. Actual router/console hardware acceptance remains outstanding. The OpenWrt router itself needs internet access for installation; SWFence restricts only configured console MACs.
 
 ## Recommended: SSH installer
+
+> [!CAUTION]
+> ❗ **Before installation: disable traffic acceleration.** In LuCI, open **Network → Firewall** and disable **Software flow offloading** and **Hardware flow offloading**. On manufacturer firmware, also check **Network Acceleration / NAT acceleration**. SWFence does not disable these settings automatically; protection with acceleration enabled has not been verified.
+>
+> Keep the console disconnected from the internet until protection is applied and checked. After changing firewall, VPN, proxy or acceleration modules, check isolation again, including after a router reboot. A correct MAC alone does not prove isolation.
 
 From your computer, connect using your router's actual LAN address:
 

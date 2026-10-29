@@ -31,6 +31,11 @@ The packages contain shell scripts and JavaScript (`all`/`noarch`). Runtime/kern
 
 ## Install with the SSH script
 
+> [!CAUTION]
+> ❗ **Before installation: disable traffic acceleration.** In LuCI, open **Network → Firewall** and disable **Software flow offloading** and **Hardware flow offloading**. On manufacturer firmware, also check **Network Acceleration / NAT acceleration**. SWFence does not disable these settings automatically; protection with acceleration enabled has not been verified.
+>
+> Keep the console disconnected from the internet until protection is applied and checked. After changing firewall, VPN, proxy or acceleration modules, check isolation again, including after a router reboot. A correct MAC alone does not prove isolation.
+
 Use your actual router LAN address in place of `192.168.1.1`.
 
 **1. Connect from your computer:**
@@ -114,6 +119,8 @@ apk del luci-app-swfence swfence
 ```
 
 ## Limits and validation
+
+SWFence checks console traffic in early bridge/inet prerouting chains at priority `-310`. An ordinary allow rule cannot override its final drop. It does not have exclusive control of the router: another privileged module can remove or replace rules, change packet handling before these checks, or provide an accelerated path. Recheck isolation after network/firewall changes.
 
 Allowed LAN hosts and internet exceptions must be trusted: they can relay traffic outward. Other Wi-Fi networks, hotspots, unregistered adapters, downstream NAT and nonstandard acceleration are outside the verified test scope. No console/account ban-prevention guarantee is made. SWFence is not affiliated with Nintendo or 90DNS.
 
