@@ -2,6 +2,9 @@
 
 **Keep it local.** OpenWrt firewall protection for Nintendo Switch and Nintendo Switch 2, with a minimal LuCI panel.
 
+> [!CAUTION]
+> ❗ **Use SWFence at your own risk.** Back up your router configuration and verify protection on your own hardware. Internet isolation and protection from console/account bans are not guaranteed.
+
 SWFence keeps selected IPv4 LAN services accessible while blocking other console traffic by MAC address. It is a router-side replacement for **90DNS when your goal is local access without general internet access**. It blocks direct-IP traffic too, so it does not need a list of every Nintendo server. Optional exact-domain and individual IPv4 exceptions let you open specific internet destinations. IPv6 remains blocked.
 
 **Release:** [v0.3.0](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0) · [Download the install bundle](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) · [Installation instructions](INSTALL.md)
@@ -27,7 +30,10 @@ Protection applies only to the registered MACs through this OpenWrt router. Othe
 - LuCI for the web panel; automatic fw4 includes and the firmware's `kmod-nft-bridge` package.
 - The router must see the console's original MAC. A downstream router performing NAT hides it.
 
-The packages contain shell scripts and JavaScript (`all`/`noarch`). Runtime/kernel dependencies are installed from the router's own firmware feeds. The release packages were built with official OpenWrt 24.10.4 and 25.12.2 SDKs. Nonstandard zones, VLANs, acceleration or proxy routing require device-specific validation.
+The packages contain shell scripts and JavaScript (`all`/`noarch`). Runtime/kernel dependencies are installed from the router's own firmware feeds. The release packages were built with official OpenWrt 24.10.4 and 25.12.2 SDKs.
+
+> [!WARNING]
+> ❗ **Nonstandard zones, VLANs, acceleration or proxy routing require device-specific validation.** Use SWFence at your own risk and verify protection on your router.
 
 ## Install with the SSH script
 
