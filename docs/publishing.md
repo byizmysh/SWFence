@@ -18,7 +18,7 @@ Release preparation for https://github.com/byizmysh/SWFence. The first release i
    `swfence-25.12.apk`, `luci-app-swfence-25.12.apk`.
 6. Run `python3 scripts/build-release.py` to create the source archive, install bundle (when all four packages are present),
    installer, INSTALL.md and a single SHA256SUMS for all assets present in `dist/`.
-7. Create/review a draft `v0.3.0` release and upload the complete assets.
+7. Create/review a draft `v0.4.0` release and upload the complete assets.
    The optional Prepare draft release workflow creates only a source draft;
    native package assets must be added after their build/review.
 8. Test the documented SSH download command against the draft's final public

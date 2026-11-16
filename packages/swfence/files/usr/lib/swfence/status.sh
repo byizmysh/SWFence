@@ -43,7 +43,7 @@ if [ "${#repository}" -le 200 ] && printf '%s\n' "$repository" | grep -Eq '^[A-Z
     project_url=https://github.com/$repository
 fi
 json_init
-json_add_string version '0.3.0'
+json_add_string version '0.4.0'
 json_add_string project_url "$project_url"
 json_add_boolean configured_enabled "$ENABLED"
 json_add_boolean configuration_valid "$valid"

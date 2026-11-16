@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.3.0 — Unreleased
+## 0.4.0
+
+- Fix the disabled Apply protection settings button for users with write access.
+- Mark settings as unsaved when a domain, IPv4 address or MAC address is added or removed. Show the form in read-only mode for users without write access.
+- Fix the router-local HTTP diagnostic by sending a single connection-check Host header.
+
+## 0.3.0
 
 - Introduce the SWFence name and native `swfence` / `luci-app-swfence` packages.
 - Add a minimal native LuCI panel under Services with settings, live status, drop counters and local diagnostics; no custom UI colors or stylesheet.

@@ -64,14 +64,20 @@ if [ "$ENABLED" = 1 ] && [ -n "$router" ] && command -v nslookup >/dev/null; the
 else
     check dns_local_answer skipped 'Enable protection; nslookup with custom-port support is required.'
 fi
-if [ "$ENABLED" = 1 ] && [ -n "$router" ] && command -v uclient-fetch >/dev/null; then
-    if uclient-fetch -q -Y off -T 3 --header='Host: ctest.cdn.nintendo.net' -O "$work/http" "http://$router:18087/" 2>/dev/null && [ "$(cat "$work/http")" = ok ]; then
+if [ "$ENABLED" = 1 ] && [ -n "$router" ] && command -v nc >/dev/null && command -v timeout >/dev/null; then
+    # uclient-fetch adds its own numeric Host header before custom headers.
+    # Send one exact Host header without changing router DNS or /etc/hosts.
+    # BusyBox nc exits on stdin EOF, so keep stdin open while reading the reply.
+    if { printf 'GET / HTTP/1.1\r\nHost: ctest.cdn.nintendo.net\r\nConnection: close\r\n\r\n'; sleep 4; } | timeout 5 nc "$router" 18087 > "$work/http" 2>/dev/null &&
+       tr -d '\r' < "$work/http" > "$work/http-text" &&
+       grep -q '^HTTP/1\.[01] 200 ' "$work/http-text" &&
+       [ "$(sed '1,/^$/d' "$work/http-text")" = ok ]; then
         check http_connection_check pass 'The local HTTP endpoint returns the expected ok body.'
     else
         check http_connection_check fail 'The local HTTP endpoint did not return ok.'
     fi
 else
-    check http_connection_check skipped 'Enable protection; uclient-fetch is required.'
+    check http_connection_check skipped 'Enable protection; nc and timeout are required.'
 fi
 check console_external_isolation manual 'Verify from the console that only configured internet exceptions are reachable; observe counters or capture WAN traffic.'
 json_close_array

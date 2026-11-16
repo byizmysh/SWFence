@@ -95,6 +95,7 @@ return view.extend({
 		var m = new form.JSONMap({ main: Object.assign({}, data.config, {
 			macs: data.config.macs || [], allowed_ips: data.config.allowed_ips || [], allowed_domains: data.config.allowed_domains || []
 		}) }, '', _('Local IPv4 access and optional internet exceptions. Other external traffic and IPv6 are blocked.'));
+		m.readonly = !L.hasViewPermission();
 		var s = m.section(form.NamedSection, 'main', 'main', _('Protection settings'));
 		s.addremove = false;
 		var o = s.option(form.Flag, 'enabled', _('Enable protection'));
@@ -158,6 +159,7 @@ return view.extend({
 		}
 		poll.add(function() { return diagnosticsLive ? refreshDiagnostics() : Promise.resolve(); }, 15);
 		var diagnosticsButton = E('button', {
+			'type': 'button',
 			'class': 'cbi-button',
 			'click': ui.createHandlerFn(this, function() {
 				diagnosticsLive = !diagnosticsLive;
@@ -174,7 +176,7 @@ return view.extend({
 			dom.content(applyFeedback, E('p', {}, [ E('strong', {}, title), detail ? ' ' + detail : '' ]));
 		}
 		function setApplying(busy, label) {
-			applyButton.disabled = busy || !L.hasViewPermission();
+			applyButton.disabled = busy || m.readonly;
 			applyButton.setAttribute('aria-busy', busy ? 'true' : 'false');
 			applyButton.classList.toggle('spinning', busy);
 			dom.content(applyButton, label);
@@ -184,10 +186,11 @@ return view.extend({
 			}
 		}
 		var applyButton = E('button', {
-			'class': 'cbi-button',
-			'disabled': !L.hasViewPermission(),
+			'type': 'button',
+			'class': 'cbi-button cbi-button-apply',
+			'disabled': m.readonly ? '' : null,
 			'click': function() {
-				if (!L.hasViewPermission()) return Promise.resolve();
+				if (m.readonly) return Promise.resolve();
 				if (applyPending) return applyPending;
 				var label = _('Apply protection settings');
 				var accepted = false;
@@ -248,6 +251,7 @@ return view.extend({
 			}
 			settingsNode.addEventListener('input', markUnsaved);
 			settingsNode.addEventListener('change', markUnsaved);
+			settingsNode.addEventListener('cbi-dynlist-change', markUnsaved);
 			var footer = [ E('span', {}, 'SWFence · ' + (data.version || '')) ];
 			if (/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(data.project_url || ''))
 				footer.push(' · ', E('a', { href: data.project_url, target: '_blank', rel: 'noopener noreferrer' }, _('GitHub')));

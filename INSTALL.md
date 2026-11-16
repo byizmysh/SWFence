@@ -1,6 +1,8 @@
-# Installing SWFence 0.3.0
+# Installing SWFence 0.4.0
 
 This release supports OpenWrt 24.10.x (opkg) and 25.12.x (apk) with firewall4. Actual router/console hardware acceptance remains outstanding. The OpenWrt router itself needs internet access for installation; SWFence restricts only configured console MACs.
+
+For a local build or an upgrade, use the package files from the archive. The SSH installer fetches a published GitHub release.
 
 ## Recommended: SSH installer
 
@@ -20,25 +22,25 @@ ssh root@192.168.1.1
 Then run on OpenWrt:
 
 ```sh
-wget -O /tmp/swfence-install.sh https://github.com/byizmysh/SWFence/releases/download/v0.3.0/install.sh
-sh /tmp/swfence-install.sh byizmysh/SWFence v0.3.0
+wget -O /tmp/swfence-install.sh https://github.com/byizmysh/SWFence/releases/download/v0.4.0/install.sh
+sh /tmp/swfence-install.sh byizmysh/SWFence v0.4.0
 ```
 
 The script downloads the matching native packages and verifies their release checksums before installation. Complete the Wi-Fi/Ethernet MAC, router LAN IPv4 and allowed-subnet wizard; check that enabling/applying protection succeeds. While the console is still disconnected, open LuCI → Services → SWFence, check the applied settings and both firewall guards, leave both internet-exception lists empty for complete external blocking, and run diagnostics. Then set both console DNS addresses manually to that router LAN IPv4, leave console IP addressing automatic if using DHCP, disable console proxy settings and connect. Verify allowed/blocked traffic from the console.
 
 ## If you downloaded the archive
 
-`swfence-0.3.0.tar.gz` contains this file, the English README, `install.sh`, all four native package files, VERSION, LICENSE and checksums. It contains no screenshots or router-specific credentials/configuration. Extract it on your computer or OpenWrt:
+`swfence-0.4.0.tar.gz` contains this file, the English README, `install.sh`, all four native package files, VERSION, LICENSE and checksums. It contains no screenshots or router-specific credentials/configuration. Extract it on your computer or OpenWrt:
 
 ```sh
-tar -xzf swfence-0.3.0.tar.gz
+tar -xzf swfence-0.4.0.tar.gz
 cd SWFence
 ```
 
 You can run the included online installer on OpenWrt:
 
 ```sh
-sh install.sh byizmysh/SWFence v0.3.0
+sh install.sh byizmysh/SWFence v0.4.0
 ```
 
 It fetches and verifies packages from the GitHub release, even if package files are already present in the extracted directory.
@@ -54,7 +56,6 @@ On **OpenWrt 24.10.x**:
 ```sh
 opkg update
 opkg install ./swfence-24.10.ipk ./luci-app-swfence-24.10.ipk
-swfence setup
 ```
 
 On **OpenWrt 25.12.x**:
@@ -62,10 +63,11 @@ On **OpenWrt 25.12.x**:
 ```sh
 apk update
 apk add --allow-untrusted ./swfence-25.12.apk ./luci-app-swfence-25.12.apk
-swfence setup
 ```
 
 Run only the package-manager commands for your firmware family. The APKs are local unsigned packages; use `--allow-untrusted` only after verifying these downloaded files. Dependencies still come from your router's firmware feeds.
+
+On a new installation, run `swfence setup`. On an upgrade, keep your existing configuration and reload the SWFence page in LuCI.
 
 ## Before connecting the console
 

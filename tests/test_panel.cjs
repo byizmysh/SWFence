@@ -6,7 +6,7 @@ const source = fs.readFileSync(path.join(__dirname, '../packages/luci-app-swfenc
 let state = {
  configuration_valid: true, configured_enabled: true, guard_present: true, config_matches: true,
  dns_running: true, http_running: true, last_error: '',
- version:'0.3.0', project_url:'https://github.com/example/SWFence',
+ version:'0.4.0', project_url:'https://github.com/example/SWFence',
  domain_status:{state:'updated',resolved:'1',unresolved:'0',error:''},
  counters: {inet_dropped:'4', bridge_dropped:'12'},
  daily_counters: {available:true,day:'2026-10-28',timezone:'MSK +0300',collected_since:'1793142000',collected_since_local:'2026-10-28 00:00:00 MSK',inet_dropped:'4',bridge_dropped:'12'},
@@ -25,8 +25,13 @@ let configureResult={ok:true,message:'Applied'};
 let configureError=false;
 let configureStatusError=false;
 let saveError=false;
+let map;
 const polls = [];
-const E = (tag, attrs, children) => ({tag, attrs:attrs || {}, disabled:!!(attrs || {}).disabled, children: children == null ? [] : Array.isArray(children) ? children : [children],
+const E = (tag, attrs, children) => ({tag,
+ attrs:Object.fromEntries(Object.entries(attrs || {}).filter(([, value]) => value != null)),
+ get disabled(){return Object.hasOwn(this.attrs, 'disabled');},
+ set disabled(value){if (value) this.attrs.disabled=''; else delete this.attrs.disabled;},
+ children: children == null ? [] : Array.isArray(children) ? children : [children],
  listeners:{}, addEventListener(name,fn){this.listeners[name]=fn;},
  setAttribute(name,value){this.attrs[name]=value;},removeAttribute(name){delete this.attrs[name];},
  classList:{toggle(){}}
@@ -34,7 +39,7 @@ const E = (tag, attrs, children) => ({tag, attrs:attrs || {}, disabled:!!(attrs 
 const nodes = n => n && typeof n === 'object' ? [n, ...n.children.flatMap(nodes)] : [];
 const text = n => typeof n === 'string' ? n : n && typeof n === 'object' ? n.children.map(text).join(' ') : '';
 class JSONMap {
- constructor(data) {this.config = structuredClone(data); this.data = {get:(_, key) => this.config[key]};}
+ constructor(data) {map = this; this.config = structuredClone(data); this.data = {get:(_, key) => this.config[key]};}
  section() {return {option:()=>({depends:()=>{}}), addremove:false};}
  render() {return Promise.resolve(E('form',{},'Settings'));}
  save(fn) {return saveError ? Promise.reject(new Error('Invalid form value')) : Promise.resolve().then(fn);}
@@ -117,13 +122,21 @@ const view = new Function('view','form','rpc','poll','ui','dom','E','_','L',sour
  statusError=false;
  await statusPoll();
  assert.match(text(tree), /Waiting for next update/);
- await button('Apply protection settings').attrs.click();
+ const initialApply=button('Apply protection settings');
+ assert.equal(initialApply.disabled,false,'A writable page must omit the HTML disabled attribute');
+ const form=nodes(tree).find(n=>n.tag==='form');
+ assert.equal(map.readonly,false);
+ const editedConfig={...state.config, macs:['02:00:00:00:00:22'], allowed_ips:['8.8.8.8'], allowed_domains:['example.org']};
+ Object.assign(map.config.main, editedConfig);
+ form.listeners['cbi-dynlist-change']();
+ assert.match(text(tree), /Unsaved changes/);
+ state.config=editedConfig;
+ await initialApply.attrs.click();
  assert.equal(configureArgs.length,8);
- assert.equal(configureArgs[1],'02:00:00:00:00:11');
- assert.deepEqual(configureArgs.slice(6), ['1.1.1.1','example.com']);
+ assert.equal(configureArgs[1],'02:00:00:00:00:22');
+ assert.deepEqual(configureArgs.slice(6), ['8.8.8.8','example.org']);
  assert.match(text(tree), /Settings applied\./);
  const apply=button('Applied');
- const form=nodes(tree).find(n=>n.tag==='form');
  assert.equal(apply.disabled,false);
  form.listeners.input();
  assert.equal(text(apply),'Apply protection settings');
@@ -198,6 +211,11 @@ const view = new Function('view','form','rpc','poll','ui','dom','E','_','L',sour
  state.project_url='javascript:alert(1)';
  tree=await view.render(await view.load());
  assert.equal(nodes(tree).filter(n=>n.tag==='a').length,0,'An untrusted project URL must not become a link');
- assert.equal(button('Apply protection settings').attrs.disabled,true);
+ const readonlyApply=button('Apply protection settings');
+ assert.equal(map.readonly,true);
+ assert.equal(readonlyApply.disabled,true);
+ const beforeReadonly=configureCalls;
+ await readonlyApply.attrs.click();
+ assert.equal(configureCalls,beforeReadonly);
  console.log('Panel tests passed: apply progress/confirmation, unsaved edits, duplicate clicks, backend/connection/validation errors, live diagnostics, counters, text escaping and read-only UI.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

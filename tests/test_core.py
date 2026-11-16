@@ -420,12 +420,15 @@ printf '%s\\n' "$*" >> /tmp/dns-targets
 case "$*" in *swfence-unlisted.invalid*) echo NXDOMAIN; exit 1 ;; esac
 printf 'Name: ctest.cdn.nintendo.net\\nAddress: 192.168.50.1\\n'
 ''')
-        self.write('/bin/uclient-fetch', '''#!/bin/sh
-while [ "$#" -gt 0 ]; do
- if [ "$1" = -O ]; then shift; printf ok > "$1"; fi
- shift
+        self.write('/usr/bin/nc', '''#!/bin/sh
+printf '%s\\n' "$*" > /tmp/http-target
+while IFS= read -r line; do
+ printf '%s\\n' "$line" >> /tmp/http-request
+ [ "$line" != "$(printf '\\r')" ] || break
 done
+printf 'HTTP/1.1 200 OK\\r\\nContent-Length: 2\\r\\n\\r\\nok'
 ''')
+        self.write('/bin/timeout', '#!/bin/sh\nshift\nexec "$@"\n')
         report = json.loads(self.native('/usr/sbin/swfence', 'diagnostics').stdout)
         checks = {x['name']: x['result'] for x in report['checks']}
         self.assertEqual(checks['console_external_isolation'], 'manual')
@@ -433,6 +436,9 @@ done
         self.assertEqual(checks['dns_external_A'], 'pass')
         self.assertEqual(checks['dns_external_AAAA'], 'pass')
         self.assertEqual(checks['http_connection_check'], 'pass')
+        self.assertEqual((self.root / 'tmp/http-target').read_text().strip(), '192.168.50.1 18087')
+        request = (self.root / 'tmp/http-request').read_text().splitlines()
+        self.assertEqual([line for line in request if line.lower().startswith('host:')], ['Host: ctest.cdn.nintendo.net'])
         self.assertIn('Router-local', report['scope'])
         for query in (self.root / 'tmp/dns-targets').read_text().splitlines():
             self.assertTrue(query.endswith('192.168.50.1'))

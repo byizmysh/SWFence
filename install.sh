@@ -3,13 +3,13 @@
 set -eu
 PATH=/usr/sbin:/usr/bin:/sbin:/bin${PATH:+:$PATH}
 export PATH
-usage() { echo 'Usage: sh install.sh OWNER/SWFence v0.3.0'; }
+usage() { echo 'Usage: sh install.sh OWNER/SWFence v0.4.0'; }
 case "${1:-}" in -h|--help|'') usage; exit 0 ;; esac
 [ "$#" = 2 ] || { usage >&2; exit 1; }
 repo=$1
 tag=$2
 printf '%s\n' "$repo" | grep -Eq '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$' || { echo 'Invalid GitHub repository.' >&2; exit 1; }
-printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo 'Use a version tag such as v0.3.0.' >&2; exit 1; }
+printf '%s\n' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' || { echo 'Use a version tag such as v0.4.0.' >&2; exit 1; }
 [ "$(id -u)" = 0 ] && [ -f /etc/openwrt_release ] || { echo 'Run this on OpenWrt as root.' >&2; exit 1; }
 command -v fw4 >/dev/null || { echo 'OpenWrt with firewall4 is required.' >&2; exit 1; }
 if command -v opkg >/dev/null; then flavor=24.10; ext=ipk
