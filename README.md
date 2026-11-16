@@ -7,7 +7,7 @@
 
 SWFence keeps selected IPv4 LAN services accessible while blocking other console traffic by MAC address. It is a router-side replacement for **90DNS when your goal is local access without general internet access**. It blocks direct-IP traffic too, so it does not need a list of every Nintendo server. Optional exact-domain and individual IPv4 exceptions let you open specific internet destinations. IPv6 remains blocked.
 
-**Release:** [v0.3.0](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0) · [Download the install bundle](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) · [Installation instructions](INSTALL.md)
+**Release:** [v0.4.0](https://github.com/byizmysh/SWFence/releases/tag/v0.4.0) · [Download the install bundle](https://github.com/byizmysh/SWFence/releases/download/v0.4.0/swfence-0.4.0.tar.gz) · [Installation instructions](INSTALL.md)
 
 ## What you can do
 
@@ -53,8 +53,8 @@ ssh root@192.168.1.1
 **2. Run these commands on the OpenWrt router:**
 
 ```sh
-wget -O /tmp/swfence-install.sh https://github.com/byizmysh/SWFence/releases/download/v0.3.0/install.sh
-sh /tmp/swfence-install.sh byizmysh/SWFence v0.3.0
+wget -O /tmp/swfence-install.sh https://github.com/byizmysh/SWFence/releases/download/v0.4.0/install.sh
+sh /tmp/swfence-install.sh byizmysh/SWFence v0.4.0
 ```
 
 The installer checks the firmware family, downloads its two native packages, verifies the selected files against the release SHA256SUMS, installs dependencies and opens the setup wizard. It does not guess the console's MAC. The checksum manifest comes from the same GitHub release; use the repository you trust. OpenWrt 25.12 uses `--allow-untrusted` only for the two local release APKs after checksum verification; they are not signed by the OpenWrt project.
@@ -67,7 +67,7 @@ The installer checks the firmware family, downloads its two native packages, ver
 
 **Router fields versus console DNS:** **Router LAN IPv4** and **Allowed IPv4 subnet** are SWFence settings on the router; do not enter the subnet as the console's address. Once the MAC guard is active, it blocks unapproved external traffic independently of console DNS. Keeping old 90DNS addresses or automatic DNS does not bypass the guard, but external DNS is blocked by default. Use the router's LAN IPv4 for SWFence's local DNS/connection-check responses. Automatic DNS is suitable only if DHCP supplies that same router DNS address.
 
-Download the [release archive](https://github.com/byizmysh/SWFence/releases/download/v0.3.0/swfence-0.3.0.tar.gz) for the installer, native packages and English installation instructions. See [INSTALL.md](INSTALL.md) for archive/manual installation and [all release files](https://github.com/byizmysh/SWFence/releases/tag/v0.3.0).
+Download the [release archive](https://github.com/byizmysh/SWFence/releases/download/v0.4.0/swfence-0.4.0.tar.gz) for the installer, native packages and English installation instructions. See [INSTALL.md](INSTALL.md) for archive/manual installation and [all release files](https://github.com/byizmysh/SWFence/releases/tag/v0.4.0).
 
 ## Find your addresses
 
