@@ -39,8 +39,16 @@ const E = (tag, attrs, children) => ({tag,
 const nodes = n => n && typeof n === 'object' ? [n, ...n.children.flatMap(nodes)] : [];
 const text = n => typeof n === 'string' ? n : n && typeof n === 'object' ? n.children.map(text).join(' ') : '';
 class JSONMap {
- constructor(data) {map = this; this.config = structuredClone(data); this.data = {get:(_, key) => this.config[key]};}
- section() {return {option:()=>({depends:()=>{}}), addremove:false};}
+ constructor(data) {
+  map = this;
+  this.config = structuredClone(data);
+  this.options = {};
+  this.data = {
+   get:(_, key)=>this.config[key],
+   set:(_, key, option, value)=>{this.config[key][option]=value;}
+  };
+ }
+ section() {return {option:(type, key)=>(this.options[key]={type, depends:()=>{}}), addremove:false};}
  render() {return Promise.resolve(E('form',{},'Settings'));}
  save(fn) {return saveError ? Promise.reject(new Error('Invalid form value')) : Promise.resolve().then(fn);}
 }
@@ -61,7 +69,7 @@ const rpc={declare:desc=>(...args)=>{
  return pendingConfigure || Promise.resolve(configureResult);
 }};
 const view = new Function('view','form','rpc','poll','ui','dom','E','_','L',source)(
- {extend:x=>x},{JSONMap,NamedSection:0,Flag:0,DynamicList:0,Value:0},rpc,
+ {extend:x=>x},{JSONMap,NamedSection:0,Flag:0,DynamicList:0,Value:0,TextValue:'textarea'},rpc,
  {add:(f,interval)=>polls.push({run:f,interval})},ui,dom,E,s=>s,{hasViewPermission:()=>!readonly});
 (async()=>{
  let tree = await view.render(await view.load());
@@ -126,15 +134,20 @@ const view = new Function('view','form','rpc','poll','ui','dom','E','_','L',sour
  assert.equal(initialApply.disabled,false,'A writable page must omit the HTML disabled attribute');
  const form=nodes(tree).find(n=>n.tag==='form');
  assert.equal(map.readonly,false);
- const editedConfig={...state.config, macs:['02:00:00:00:00:22'], allowed_ips:['8.8.8.8'], allowed_domains:['example.org']};
- Object.assign(map.config.main, editedConfig);
+ assert.equal(map.options.allowed_domains.type,'textarea');
+ assert.equal(map.config.main.allowed_domains,'example.com');
+ const domains=['youtube.com','github.com','githubusercontent.com','release-assets.githubusercontent.com','example.com'];
+ domains.push(...Array.from({length:27}, (_, i)=>'d'+i+'.example.com'));
+ const editedConfig={...state.config, macs:['02:00:00:00:00:22'], allowed_ips:['8.8.8.8'], allowed_domains:domains};
+ Object.assign(map.config.main, editedConfig, {allowed_domains:'\r\n '+domains.join('\r\n ')+'\r\n GITHUB.COM \r\n'});
  form.listeners['cbi-dynlist-change']();
  assert.match(text(tree), /Unsaved changes/);
  state.config=editedConfig;
  await initialApply.attrs.click();
  assert.equal(configureArgs.length,8);
  assert.equal(configureArgs[1],'02:00:00:00:00:22');
- assert.deepEqual(configureArgs.slice(6), ['8.8.8.8','example.org']);
+ assert.deepEqual(configureArgs.slice(6), ['8.8.8.8',domains.join(' ')]);
+ assert.equal(map.config.main.allowed_domains,domains.join('\n'));
  assert.match(text(tree), /Settings applied\./);
  const apply=button('Applied');
  assert.equal(apply.disabled,false);
@@ -194,6 +207,22 @@ const view = new Function('view','form','rpc','poll','ui','dom','E','_','L',sour
  assert.match(text(tree), /Settings were not sent/);
  assert.equal(form.attrs.inert,undefined);
  saveError=false;
+ for (const [input, message] of [
+  ['github.com youtube.com', /Enter one exact domain per line/],
+  [domains.concat('api.github.com').join('\n'), /at most 32 unique domains/],
+  [Array.from({length:12}, (_, i)=>('a'.repeat(60)+'.').repeat(3)+'d'+i+'.example.com').join('\n'), /domain list is too long/]
+ ]) {
+  map.config.main.allowed_domains=input;
+  const beforeInvalidDomains=configureCalls;
+  await apply.attrs.click();
+  assert.equal(configureCalls,beforeInvalidDomains);
+  assert.match(text(tree),message);
+ }
+ map.config.main.allowed_domains='\n \t\n';
+ state.config={...state.config,allowed_domains:[]};
+ await apply.attrs.click();
+ assert.equal(configureArgs[7],'');
+ assert.match(text(tree), /Settings applied\./);
  state.config_matches = false;
  await statusPoll();
  assert.match(text(tree), /Settings not applied/);

@@ -8,11 +8,29 @@
 <main><div class="preview">SWFence interface preview — simulated live data, no router connected.</div><div id="notifications"></div><div id="app">Loading view…</div></main>
 <script>
 const E=(tag,attrs,children)=>{const el=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='click')el.addEventListener('click',v);else if(v!=null)el.setAttribute(k,v)}for(const c of (children==null?[]:Array.isArray(children)?children:[children]))el.append(c instanceof Node?c:document.createTextNode(String(c)));return el;};
-const types={Flag:'flag',DynamicList:'list',Value:'value',NamedSection:'named'};
+const types={Flag:'flag',DynamicList:'list',Value:'value',TextValue:'textarea',NamedSection:'named'};
 class JSONMap{
- constructor(data,title,description){this.values=structuredClone(data);this.title=title;this.description=description;this.options=[];this.data={get:(_,key)=>this.values[key]};}
+ constructor(data,title,description){this.values=structuredClone(data);this.title=title;this.description=description;this.options=[];this.data={get:(_,key)=>this.values[key],set:(_,key,option,value)=>{this.values[key][option]=value;}};}
  section(){return{option:(type,key,label,description)=>{const o={type,key,label,description,depends:(dep,value)=>{o.dependency={dep,value};}};this.options.push(o);return o;}};}
- render(){const fields=this.options.filter(o=>!o.dependency || (this.values.main[o.dependency.dep]||'')===o.dependency.value).map(o=>{const current=this.values.main[o.key];let input;if(o.type==='flag'){input=E('input',{type:'checkbox'});input.checked=current==='1';input.onchange=()=>this.values.main[o.key]=input.checked?'1':'0';}else{input=E(o.type==='list'?'textarea':'input',{type:'text'});input.value=Array.isArray(current)?current.join('\n'):(current||'');input.placeholder=o.placeholder||'';input.oninput=()=>this.values.main[o.key]=o.type==='list'?input.value.trim().split(/\s+/):input.value;}return E('div',{class:'field'},[E('label',{},o.label),input,o.description?E('small',{},o.description):'']);});return Promise.resolve(E('section',{class:'formmap'},[...(this.title?[E('h2',{},this.title)]:[]),E('p',{},this.description),E('div',{class:'fields'},fields)]));}
+ render(){
+  const fields=this.options.filter(o=>!o.dependency || (this.values.main[o.dependency.dep]||'')===o.dependency.value).map(o=>{
+   const current=this.values.main[o.key];
+   let input;
+   if(o.type==='flag'){
+    input=E('input',{type:'checkbox'});
+    input.checked=current==='1';
+    input.onchange=()=>this.values.main[o.key]=input.checked?'1':'0';
+   }else{
+    input=o.type==='list' || o.type==='textarea' ? E('textarea',{rows:o.rows}) : E('input',{type:'text'});
+    input.value=Array.isArray(current)?current.join('\n'):(current||'');
+    input.placeholder=o.placeholder||'';
+    if(o.rows) input.style.height='auto';
+    input.oninput=()=>this.values.main[o.key]=o.type==='list'?input.value.trim().split(/\s+/):input.value;
+   }
+   return E('div',{class:'field'},[E('label',{},o.label),input,o.description?E('small',{},o.description):'']);
+  });
+  return Promise.resolve(E('section',{class:'formmap'},[...(this.title?[E('h2',{},this.title)]:[]),E('p',{},this.description),E('div',{class:'fields'},fields)]));
+ }
  save(fn){return Promise.resolve().then(fn);}
 }
 const previewDay=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Moscow',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());

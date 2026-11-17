@@ -81,6 +81,23 @@ function diagnosticRows(report) {
 	});
 }
 
+function parseAllowedDomains(value) {
+	var domains = new Set();
+	String(value || '').split(/\r\n?|\n/).forEach(function(line) {
+		var domain = line.trim();
+		if (!domain) return;
+		if (!/^[a-zA-Z0-9.-]+$/.test(domain))
+			throw new TypeError(_('Enter one exact domain per line, without URLs, paths or wildcards.'));
+		domains.add(domain.toLowerCase());
+	});
+	var list = Array.from(domains);
+	if (list.length > 32)
+		throw new TypeError(_('Enter at most 32 unique domains.'));
+	if (list.join(' ').length > 2048)
+		throw new TypeError(_('The domain list is too long. Use at most 2048 characters including separators.'));
+	return list;
+}
+
 function settingsMatch(expected, actual) {
 	if (!actual) return false;
 	var fields = [ 'enabled', 'router_ip', 'lan_subnet', 'local_host', 'local_port' ];
@@ -93,7 +110,8 @@ return view.extend({
 	load: function() { return getStatus(); },
 	render: function(data) {
 		var m = new form.JSONMap({ main: Object.assign({}, data.config, {
-			macs: data.config.macs || [], allowed_ips: data.config.allowed_ips || [], allowed_domains: data.config.allowed_domains || []
+			macs: data.config.macs || [], allowed_ips: data.config.allowed_ips || [],
+			allowed_domains: (data.config.allowed_domains || []).join('\n')
 		}) }, '', _('Local IPv4 access and optional internet exceptions. Other external traffic and IPv6 are blocked.'));
 		m.readonly = !L.hasViewPermission();
 		var s = m.section(form.NamedSection, 'main', 'main', _('Protection settings'));
@@ -115,10 +133,11 @@ return view.extend({
 		o = s.option(form.Value, 'local_port', _('Strict-profile TCP port'));
 		o.datatype = 'port';
 		o.depends('lan_subnet', '');
-		o = s.option(form.DynamicList, 'allowed_domains', _('Allowed internet domains'),
-			_('Optional. Add exact names such as example.com, without https://, paths or wildcards. Add required subdomains separately. Resolved IPv4 addresses refresh every 60 seconds and may be shared by other sites.'));
-		o.datatype = 'hostname';
-		o.placeholder = 'example.com';
+		o = s.option(form.TextValue, 'allowed_domains', _('Allowed internet domains'),
+			_('Enter one exact domain per line, up to 32 unique domains. Add required subdomains separately. Resolved IPv4 addresses refresh every 60 seconds and may be shared by other sites.'));
+		o.rows = 7;
+		o.monospace = true;
+		o.placeholder = 'example.com\napi.example.com';
 		o = s.option(form.DynamicList, 'allowed_ips', _('Allowed internet IPv4 addresses'),
 			_('Optional. Add individual IPv4 addresses, for example 1.1.1.1. All ports and protocols to these addresses are allowed; IPv6 remains blocked. Leave both lists empty to block all internet access.'));
 		o.datatype = 'ip4addr';
@@ -202,7 +221,8 @@ return view.extend({
 					var expected = {
 						enabled: c.enabled || '0', router_ip: c.router_ip || '', lan_subnet: c.lan_subnet || '',
 						local_host: c.local_host || '', local_port: c.local_port || '',
-						macs: (c.macs || []).slice(), allowed_ips: (c.allowed_ips || []).slice(), allowed_domains: (c.allowed_domains || []).slice()
+						macs: (c.macs || []).slice(), allowed_ips: (c.allowed_ips || []).slice(),
+						allowed_domains: parseAllowedDomains(c.allowed_domains)
 					};
 					submitted = true;
 					return configure(expected.enabled, expected.macs.join(' '), expected.router_ip,
@@ -226,6 +246,7 @@ return view.extend({
 								showApplyFeedback(_('Settings saved; attention required.'), statusText(s));
 								return;
 							}
+							m.data.set('json', 'main', 'allowed_domains', expected.allowed_domains.join('\n'));
 							label = _('Applied');
 							showApplyFeedback(s.preview ? _('Preview settings applied.') : _('Settings applied.'),
 								(s.preview ? _('Demo data only; no router was changed. ') : _('Confirmed by the router at ')) + new Date().toLocaleTimeString());
